@@ -1,3 +1,4 @@
+#define DEBUG 1
 #include"rom.h"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -15,7 +16,10 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 uint16_t load(uint16_t adress)
 {
-  return memory[adress];
+  uint16_t internalAdress = (adress-0x200)*2;
+  uint16_t cache = (memory[internalAdress]<<8)+memory[internalAdress+1];
+  Serial.println(String(internalAdress, HEX)+String(" | ")+String(cache, HEX)+String(" | ")+String(adress, HEX));
+  return cache;
 }
 uint8_t displayDriver(uint8_t x, uint8_t y, uint8_t sprite)
 {
@@ -30,20 +34,23 @@ uint8_t displayDriver(uint8_t x, uint8_t y, uint8_t sprite)
   }
   display.display();
 }
+void cls(void)
+{
+    display.clearDisplay();
+}
 struct CHIP8_machine cm8;
 void setup() {
   Serial.begin(9600);
   
   display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADRESS);
-  display.clearDisplay();
+  //display.clearDisplay();
   init_Chip8(&cm8);
   cm8.memory = &load;
   cm8.dispDriver = &displayDriver; 
+  cm8.cls = &cls;
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  Serial.println(cm8.PC);
   run_Chip8(&cm8);
 }

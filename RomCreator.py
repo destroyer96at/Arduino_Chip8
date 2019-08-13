@@ -7,6 +7,7 @@ def EOF(f):
     return current_pos >= file_size
 def main():
 	count = 0;
+	adress = 0x200;
 	fileName = sys.argv[1]
 	inFile = open(fileName, "rb")
 	outFile = open("rom.h","w")
@@ -17,7 +18,11 @@ def main():
 		if count > 1:
 			outFile.write(",")
 		byteCell = inFile.read(1)
-		outFile.write(hex(ord(byteCell))) 
+		outFile.write(hex(ord(byteCell)))
+		if (count % 2 == 0):
+                    outFile.write("//"+ hex(adress)+ " " + hex(adress-0x200) +"\n")
+                    adress = adress+1
+                    
 	print(str(count) + " Bytes written")
 	outFile.write("};\nuint16_t length = " + str(count) + ";" )
 	outFile.write("\n#endif")

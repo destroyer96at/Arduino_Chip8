@@ -26,7 +26,7 @@ void run_Chip8(struct CHIP8_machine* machine)
 			case 0x00E0: //CLS
 			//TODO insert clear routine here 130819
         machine->cls();
-				machine->PC += 1;
+				machine->PC += 2;
 			break;
 			case 0x00EE: //RET
 				machine->PC = machine->uiStack[machine->ucStackPointer];
@@ -52,11 +52,11 @@ void run_Chip8(struct CHIP8_machine* machine)
 		cache = (unsigned char)uiOpCode & 0x0FF;
 		if(cache == machine->ucRegister[regIndex])
 		{
-			machine->PC += 2;
+			machine->PC += 4;
 		}	
 		else 
 		{
-			machine->PC += 1;
+			machine->PC += 2;
 		}
 	}
 	else if( (uiOpCode & 0xF000) == 0x4000) 
@@ -65,31 +65,33 @@ void run_Chip8(struct CHIP8_machine* machine)
 		uint16_t regIndex = ((uiOpCode & 0x0F00)>>8);
 		if(cache != machine->ucRegister[regIndex])
 		{
-			machine->PC += 2;
+			machine->PC += 4;
 		}	
 		else 
 		{
-			machine->PC += 1;
+			machine->PC += 2;
 		}
 	}
 	else if( (uiOpCode & 0xF000) == 0x5000) 
 	{
 		if(machine->ucRegister[x] == machine->ucRegister[y])
 		{
-			machine->PC += 2;
+			machine->PC += 4;
 		}
 		else 
 		{
-			machine->PC += 1;
+			machine->PC += 2;
 		}
 	}
 	else if( (uiOpCode & 0xF000) == 0x6000) 
 	{
 		machine->ucRegister[x] = uiOpCode&0x00FF;
+    machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0x7000) 
 	{
 		machine->ucRegister[x] = machine->ucRegister[x] + uiOpCode&0x00FF;
+    machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0x8000) 
 	{
@@ -162,22 +164,23 @@ void run_Chip8(struct CHIP8_machine* machine)
 				machine->ucRegister[x] = (machine->ucRegister[x]<<1);
 			break;
 		}
-			machine->PC += 1;
+			machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0x9000) 
 	{
 		if(machine->ucRegister[x] != machine->ucRegister[y])
 		{
-			machine->PC += 2;
+			machine->PC += 4;
 		}
 		else 
 		{
-			machine->PC += 1;
+			machine->PC += 2;
 		}
 	}
 	else if( (uiOpCode & 0xF000) == 0xA000) 
 	{
-		machine->PC = nnn;
+		machine->I = nnn;
+    machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0xB000) 
 	{
@@ -187,17 +190,17 @@ void run_Chip8(struct CHIP8_machine* machine)
 	{
 		uint8_t rnd = 15; //TODO implement rnd-gen
 		machine->ucRegister[x] = rnd & kk;
-		machine->PC += 1;
+		machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0xD000) 
 	{
 		uint8_t dispByte, n = uiOpCode&0xF;
 		for(uint8_t i = 0; i < n;i++)
 		{
-			dispByte = machine->memory(machine->PC + i);
-			machine->dispDriver(x, y+i, dispByte); 
+			dispByte = (machine->memory(machine->I + i)>>8);
+			machine->dispDriver(machine->ucRegister[x], machine->ucRegister[y]+i, dispByte); 
 		}
-		machine->PC += 1;
+		machine->PC += 2;
 	}
 	else if( (uiOpCode & 0xF000) == 0xE000)  //TODO is this right ??? 130819
 	{
@@ -213,11 +216,11 @@ void run_Chip8(struct CHIP8_machine* machine)
 		}
 		if(status == cmp) 
 		{
-			machine->PC += 2;
+			machine->PC += 4;
 		}
 		else 
 		{
-			machine->PC += 1;
+			machine->PC += 2;
 		}
 	}
 	else if( (uiOpCode & 0xF000) == 0xF000) 

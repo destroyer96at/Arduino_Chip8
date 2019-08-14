@@ -13,23 +13,27 @@ extern "C" {
 }
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
+struct CHIP8_machine cm8;
 uint16_t load(uint16_t adress)
 {
-  uint16_t internalAdress = (adress-0x200)*2;
+  uint16_t internalAdress = (adress-0x200);
   uint16_t cache = (memory[internalAdress]<<8)+memory[internalAdress+1];
-  Serial.println(String(internalAdress, HEX)+String(" | ")+String(cache, HEX)+String(" | ")+String(adress, HEX));
+  Serial.println(String(internalAdress, HEX)+String(" | ")+String(cache, HEX)+String(" | ")+String(adress, HEX)+String(" | ")+String(cm8.ucRegister[0], HEX)+String(" | ")+String(cm8.ucRegister[1], HEX));
   return cache;
 }
 uint8_t displayDriver(uint8_t x, uint8_t y, uint8_t sprite)
 {
-  for(uint8_t i = 7; i <= 4; i--)
+  Serial.println(String(sprite, BIN));
+  for(uint8_t i = 8; i != 0; i--)
   {
-     uint8_t pixel = 0x01 & (sprite>>i);
+     uint8_t pixel = 0x01 & (sprite>>(i-1));
+     //Serial.println(String(sprite, BIN)+"<"+String(x+(8-i), BIN)+"<"+String(y, BIN));
      if(pixel == 1)
-      display.drawPixel(x,y, WHITE);
+      display.drawPixel(x+(8-i)+32,y+16, WHITE);
      else
-      display.drawPixel(x,y, BLACK);
+      display.drawPixel(x+(8-i)+32,y+16, BLACK);
+
+//     display.drawBitmap(x+(8-i), y, sprite, 1, 1, WHITE);
      
   }
   display.display();
@@ -38,16 +42,19 @@ void cls(void)
 {
     display.clearDisplay();
 }
-struct CHIP8_machine cm8;
+
 void setup() {
   Serial.begin(9600);
   
   display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADRESS);
-  //display.clearDisplay();
-  init_Chip8(&cm8);
+  display.clearDisplay();
+
+ 
+  
   cm8.memory = &load;
   cm8.dispDriver = &displayDriver; 
   cm8.cls = &cls;
+  init_Chip8(&cm8);
 
 }
 
